@@ -5,10 +5,10 @@ It's simple project to migrate subscribers data and client data to user object, 
 ### How to start ?
 
 * You should install virtualenv and requirements from project root:
-    `sudo pip3 install virtualenv`
-    `virtualenv .venv`
-    `source .venv`
-    `pip3 install -r requirements.txt`
+    * `sudo pip3 install virtualenv`
+    * `virtualenv .venv`
+    * `source .venv`
+    * `pip3 install -r requirements.txt`
 
 ### How to use ?
 
