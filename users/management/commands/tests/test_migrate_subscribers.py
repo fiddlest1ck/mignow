@@ -24,7 +24,7 @@ class TestSubscriberMigrate:
     def test_user_with_same_phone_exists(self, mock_write):
         subscriber = SubscriberFactory.create()
         client = ClientFactory.create(email=subscriber.email)
-        UserFactory(email='test@zly1.pl', phone=client.phone)
+        UserFactory.create(email='test@zly1.pl', phone=client.phone)
         call_command('migrate_subscribers')
         mock_write.assert_called()
 
@@ -50,7 +50,7 @@ class TestSubscriberMigrate:
     @pytest.mark.django_db
     def test_user_with_same_email_exists(self):
         subscriber = SubscriberFactory.create()
-        UserFactory(email=subscriber.email)
+        UserFactory.create(email=subscriber.email)
         len_of_users = User.objects.filter().count()
         call_command('migrate_subscribers')
         assert User.objects.filter().count() == len_of_users
@@ -72,7 +72,7 @@ class TestSubscriberSMSMigrate:
     def test_user_with_same_email_exists(self, mock_write):
         subscriber = SubscriberSMSFactory.create()
         client = ClientFactory.create(phone=subscriber.phone)
-        UserFactory(phone='123123142', email=client.email)
+        UserFactory.create(phone='123123142', email=client.email)
         call_command('migrate_subscribers')
         mock_write.assert_called()
 
@@ -98,7 +98,7 @@ class TestSubscriberSMSMigrate:
     @pytest.mark.django_db
     def test_user_with_same_phone_exists(self):
         subscriber = SubscriberSMSFactory.create()
-        UserFactory(phone=subscriber.phone)
+        UserFactory.create(phone=subscriber.phone)
         len_of_users = User.objects.filter().count()
         call_command('migrate_subscribers')
         assert User.objects.filter().count() == len_of_users

@@ -11,7 +11,7 @@ class Command(BaseCommand):
     @transaction.atomic
     def update_gdpr_consent(self):
 
-        for user in User.objects.all():
+        for user in User.objects.all().iterator():
             subscriber = Subscriber.objects.filter(email=user.email).first()
             subscriber_sms = SubscriberSMS.objects.filter(phone=user.phone).first()
             if subscriber_sms or subscriber:

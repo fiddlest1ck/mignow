@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from subscribers.models import Subscriber, SubscriberSMS
 from users.models import Client, User
-from users.utils import gen_value, write_to_csv
+from users.utils import write_to_csv
 
 
 class Command(BaseCommand):
@@ -16,33 +16,33 @@ class Command(BaseCommand):
         column_names = ('id', first_field)
         csv_name = 'subscribers_conflicts.csv' if first_field == 'email' else 'subscribers_sms_conflicts.csv'
 
-        for subscriber in model.objects.all():
-            if not User.objects.filter(**gen_value(subscriber, first_field)):
-                client = Client.objects.filter(
-                    **gen_value(subscriber, first_field))
-                if client.exists():
-                    client = client.first()
-                    user = User.objects.filter(
-                        **gen_value(client, second_field)).exclude(
-                            **gen_value(client, first_field))
-                    len_of_clients = Client.objects.filter(
-                        phone=client.phone).count()
-                    if user:
-                        write_to_csv(
-                            csv_name, column_names,
-                            (client.pk, gen_value(
-                             client, first_field)[first_field]))
-                    if not user:
-                        if len_of_clients == 1:
+        for subscriber in model.objects.all().values(
+                first_field, 'gdpr_consent').iterator():
+            sub_first_field = {first_field: subscriber[first_field]}
+            if not User.objects.filter(**sub_first_field).exists():
+                client = Client.objects.filter(**sub_first_field).values(
+                    'pk', 'phone', 'email').first()
+                if client:
+                    client_first_field = {first_field: client[first_field]}
+                    client_second_field = {second_field: client[second_field]}
+                    user_exist = User.objects.filter(
+                        **client_second_field).exclude(
+                            **client_first_field).exists()
+                    if user_exist:
+                        write_to_csv(csv_name, column_names,
+                                     (client['pk'], client[first_field]))
+                    if not user_exist:
+                        if Client.objects.filter(
+                                phone=client['phone']).count() == 1:
                             User.objects.create(
-                                **gen_value(client, first_field),
-                                **gen_value(client, second_field),
-                                gdpr_consent=subscriber.gdpr_consent)
+                                **client_first_field,
+                                **client_second_field,
+                                gdpr_consent=subscriber['gdpr_consent'])
                         else:
                             write_to_csv(csv_name, column_names,
-                                         (client.pk, gen_value(
-                                          client, first_field)[first_field]))
+                                         (client['pk'], client[first_field]))
                 else:
-                    User.objects.create(**gen_value(subscriber, first_field),
-                                        **{second_field: ''},
-                                        gdpr_consent=subscriber.gdpr_consent)
+                    User.objects.create(
+                        **sub_first_field,
+                        **{second_field: ''},
+                        gdpr_consent=subscriber['gdpr_consent'])
